@@ -10,6 +10,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        /* Styling khusus untuk memastikan container chart stabil */
+        .chart-container {
+            position: relative;
+            height: 350px; /* Tinggi dikunci */
+            width: 100%;
+        }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen p-4 md:p-8">
@@ -82,10 +88,11 @@
             <!-- Right Column: Results & Chart (2/3 width on large screens) -->
             <div class="lg:col-span-2 space-y-6">
                 
-                <!-- Chart Container (Fixed Height) -->
-                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-96 relative">
+                <!-- Chart Container (Stabilized) -->
+                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                     <h3 class="text-center text-sm font-semibold text-gray-500 mb-2">Visualisasi Skor Relevansi</h3>
-                    <div class="w-full h-[320px]">
+                    <!-- Class .chart-container memastikan tinggi tetap -->
+                    <div class="chart-container">
                         <canvas id="resultsChart"></canvas>
                     </div>
                 </div>
@@ -329,7 +336,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false, // Penting agar mengikuti tinggi container
+                    maintainAspectRatio: false, // Wajib false agar mengikuti container
                     scales: {
                         y: {
                             beginAtZero: true,
