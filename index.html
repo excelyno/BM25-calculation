@@ -22,7 +22,7 @@
         <!-- Header -->
         <div class="bg-indigo-700 p-6 text-white">
             <h1 class="text-2xl font-bold">Kalkulator Relevansi BM25 (Deep Dive)</h1>
-            <p class="opacity-90 mt-1">Simulasi Algoritma Pencarian dengan Preprocessing Lengkap</p>
+            <p class="opacity-90 mt-1">Simulasi Perbandingan: Kualitas (BM25) vs Kuantitas (TF-IDF)</p>
         </div>
 
         <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -33,10 +33,9 @@
                 <!-- Input Query -->
                 <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
                     <label class="block text-sm font-semibold text-indigo-900 mb-2">Query (Pencarian)</label>
-                    <input type="text" id="queryInput" value="kucing yang makan ikan di taman" 
+                    <input type="text" id="queryInput" value="kucing makan ikan" 
                            class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none" 
                            placeholder="Masukkan query pencarian...">
-                    <p class="text-xs text-gray-500 mt-1">*Coba gunakan kata sambung (yang, di, ke) untuk melihat efek stopword removal.</p>
                 </div>
 
                 <!-- Parameter BM25 -->
@@ -45,17 +44,23 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">k1 (Saturasi Term)</label>
-                            <input type="number" id="k1Input" step="0.1" value="1.2" 
-                                   class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500">
-                            <input type="range" min="0" max="3" step="0.1" value="1.2" class="w-full mt-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" 
-                                   oninput="document.getElementById('k1Input').value = this.value">
+                            <div class="group relative">
+                                <input type="number" id="k1Input" step="0.1" value="1.2" 
+                                       class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                                <input type="range" min="0" max="3" step="0.1" value="1.2" class="w-full mt-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" 
+                                       oninput="document.getElementById('k1Input').value = this.value">
+                                <span class="text-[10px] text-gray-500">Mengontrol seberapa cepat skor "jenuh" saat kata diulang.</span>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">b (Penalti Panjang)</label>
-                            <input type="number" id="bInput" step="0.1" value="0.75" min="0" max="1" 
-                                   class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500">
-                            <input type="range" min="0" max="1" step="0.05" value="0.75" class="w-full mt-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" 
-                                   oninput="document.getElementById('bInput').value = this.value">
+                            <div class="group relative">
+                                <input type="number" id="bInput" step="0.1" value="0.75" min="0" max="1" 
+                                       class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                                <input type="range" min="0" max="1" step="0.05" value="0.75" class="w-full mt-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" 
+                                       oninput="document.getElementById('bInput').value = this.value">
+                                <span class="text-[10px] text-gray-500">Seberapa besar panjang dokumen menghukum skor.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -118,23 +123,21 @@
                 <div id="analysisBox" class="bg-orange-50 p-5 rounded-lg border border-orange-200 hidden">
                     <h3 class="text-lg font-bold text-orange-900 mb-4 flex items-center gap-2 border-b border-orange-200 pb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                        Bedah Logika (Step-by-Step)
+                        Bedah Logika: Kualitas vs Kuantitas
                     </h3>
                     
                     <div class="space-y-6 text-sm text-gray-800">
                         <!-- 1. Preprocessing -->
                         <div>
-                            <h4 class="font-bold text-indigo-700 mb-1">Step 1: Preprocessing & Stopword Removal</h4>
-                            <p class="mb-2">Sistem membersihkan teks dari tanda baca, mengubah ke huruf kecil, dan membuang kata umum (stopword).</p>
+                            <h4 class="font-bold text-indigo-700 mb-1">Step 1: Preprocessing</h4>
                             <div class="bg-white p-3 rounded border border-gray-200 font-mono text-xs">
                                 <p><span class="text-gray-500">Query Asli:</span> <span id="rawQueryDisplay" class="font-bold"></span></p>
-                                <p class="mt-1"><span class="text-red-500">Stopwords Dibuang:</span> <span id="removedStopwordsDisplay"></span></p>
                                 <p class="mt-1"><span class="text-green-600">Token Bersih:</span> <span id="cleanQueryDisplay" class="font-bold bg-green-50 px-1"></span></p>
                             </div>
                         </div>
 
-                        <!-- 2. Detail Dokumen Juara -->
-                        <div id="winnerAnalysis">
+                        <!-- 2. Analisis Kualitas -->
+                        <div id="qualityAnalysis">
                             <!-- Diisi via JS -->
                         </div>
                     </div>
@@ -147,17 +150,17 @@
     <script>
         // --- KONFIGURASI PREPROCESSING ---
         
-        // Daftar Stopwords Bahasa Indonesia (Sederhana)
         const stopwords = new Set([
             "dan", "atau", "tetapi", "jika", "maka", "karena", "agar", "untuk", "dengan", "dalam",
             "pada", "di", "ke", "dari", "oleh", "yang", "ini", "itu", "tersebut", "adalah", "ialah",
             "yaitu", "sebagai", "saya", "kamu", "kita", "mereka", "ada", "bisa", "akan", "sedang", "sudah"
         ]);
 
+        // DATA DEFAULT: Dirancang untuk menunjukkan BM25 vs Spamming
         let documents = [
-            { id: 1, text: "kucing yang suka makan ikan segar di pasar" },
-            { id: 2, text: "anjing suka makan daging ayam" },
-            { id: 3, text: "kucing dan anjing adalah hewan peliharaan yang lucu" }
+            { id: 1, text: "kucing makan ikan" }, // Dokumen Ringkas (High Quality)
+            { id: 2, text: "kucing kucing kucing kucing makan ikan ikan ikan" }, // Dokumen Spam (High Quantity)
+            { id: 3, text: "anjing makan daging" } // Irrelevan
         ];
 
         let chartInstance = null;
@@ -165,16 +168,9 @@
         // --- FUNGSI PREPROCESSING ---
 
         function preprocess(text) {
-            // 1. Case Folding & Cleaning
-            let cleanText = text.toLowerCase().replace(/[^\w\s]/g, ''); // Hapus non-huruf/angka
-            
-            // 2. Tokenizing
+            let cleanText = text.toLowerCase().replace(/[^\w\s]/g, ''); 
             let tokens = cleanText.split(/\s+/).filter(t => t.length > 0);
-            
-            // 3. Stopword Removal
             let filteredTokens = tokens.filter(t => !stopwords.has(t));
-            
-            // Simpan info apa yang dibuang untuk edukasi user
             let removed = tokens.filter(t => stopwords.has(t));
 
             return {
@@ -233,7 +229,6 @@
 
             if (!queryRaw.trim()) { alert("Isi query dulu."); return; }
 
-            // A. Preprocessing Korpus & Query
             const queryData = preprocess(queryRaw);
             const queryTokens = queryData.cleanTokens;
 
@@ -242,36 +237,32 @@
                 return {
                     id: doc.id,
                     originalText: doc.text,
-                    tokens: proc.cleanTokens, // Menggunakan token bersih untuk hitungan
-                    fullLength: proc.originalCount // Panjang asli mungkin dipakai di variasi lain, tapi BM25 biasanya pakai panjang efektif
+                    tokens: proc.cleanTokens, 
+                    fullLength: proc.originalCount 
                 };
             });
 
-            // B. Hitung Rata-rata Panjang Dokumen (avgdl)
-            // Catatan: Menggunakan panjang token bersih (setelah stopword removal)
+            // AvgDL menggunakan token bersih
             const totalLen = processedDocs.reduce((sum, doc) => sum + doc.tokens.length, 0);
             const avgdl = totalLen / processedDocs.length;
             const N = processedDocs.length;
 
-            // C. Hitung BM25
+            // --- Hitung BM25 ---
             const bm25Results = processedDocs.map(doc => {
                 let score = 0;
                 let breakdown = [];
-                const D = doc.tokens.length; // Panjang dokumen ini
+                const D = doc.tokens.length; 
 
                 queryTokens.forEach(term => {
-                    // 1. Frekuensi Term di Dokumen (f)
                     const f = doc.tokens.filter(t => t === term).length;
-                    
-                    // 2. Document Frequency (n) - Berapa banyak dokumen mengandung term ini
                     const n = processedDocs.filter(d => d.tokens.includes(term)).length;
 
-                    // 3. IDF (Inverse Document Frequency) - Probabilistic
-                    // Rumus: ln( (N - n + 0.5) / (n + 0.5) + 1 )
+                    // IDF
                     const idfRaw = Math.log( ((N - n + 0.5) / (n + 0.5)) + 1 );
-                    const idf = Math.max(0, idfRaw); // Clamp ke 0 jika negatif (jarang terjadi di rumus ini, tapi safety)
+                    const idf = Math.max(0, idfRaw); 
 
-                    // 4. Term Frequency Saturation component
+                    // BM25 Weighting Formula
+                    // Fokus Kualitas: (k1 + 1) adalah batas maksimal "boost" yang bisa didapat dari frekuensi
                     const numerator = f * (k1 + 1);
                     const denominator = f + k1 * (1 - b + b * (D / avgdl));
                     const tfComponent = numerator / denominator;
@@ -280,25 +271,31 @@
                     score += termScore;
 
                     if (termScore > 0) {
-                        breakdown.push({ term, f, idf, tfComponent, termScore });
+                        breakdown.push({ 
+                            term, 
+                            f, 
+                            idf, 
+                            tfComponent, 
+                            termScore,
+                            // Kalkulasi Saturasi untuk penjelasan
+                            saturationRatio: (tfComponent / (k1 + 1)) * 100 
+                        });
                     }
                 });
 
                 return { id: doc.id, score, docLen: D, breakdown };
             });
 
-            // D. Hitung TF-IDF Cosine Similarity (Sebagai Pembanding)
-            // Membuat Vocabulary Global
+            // --- Hitung Cosine (TF-IDF Simple) ---
             const vocab = Array.from(new Set([...queryTokens, ...processedDocs.flatMap(d => d.tokens)]));
             
             function getVector(tokens) {
                 return vocab.map(term => {
                     const tfRaw = tokens.filter(t => t === term).length;
-                    const tf = tfRaw > 0 ? (1 + Math.log10(tfRaw)) : 0; // Log normalization
-                    
+                    // Standard TF-IDF cenderung naik terus seiring frekuensi (Quantity focus)
+                    const tf = tfRaw; 
                     const df = processedDocs.filter(d => d.tokens.includes(term)).length;
-                    const idf = df > 0 ? Math.log10(N / df) : 0; // Standard IDF
-                    
+                    const idf = df > 0 ? Math.log10(N / df) : 0; 
                     return tf * idf;
                 });
             }
@@ -316,11 +313,10 @@
                 return { id: doc.id, score: sim };
             });
 
-            // E. Update UI
-            updateUI(bm25Results, cosineResults, avgdl, queryData);
+            updateUI(bm25Results, cosineResults, avgdl, queryData, k1);
         }
 
-        function updateUI(bm25, cosine, avgdl, queryData) {
+        function updateUI(bm25, cosine, avgdl, queryData, k1) {
             // Update Table
             const tbody = document.getElementById('resultsTableBody');
             tbody.innerHTML = '';
@@ -346,7 +342,7 @@
                     labels: bm25.map(r => `Doc ${r.id}`),
                     datasets: [
                         {
-                            label: 'BM25',
+                            label: 'BM25 (Kualitas)',
                             data: bm25.map(r => r.score),
                             backgroundColor: 'rgba(79, 70, 229, 0.7)',
                             borderColor: 'rgba(79, 70, 229, 1)',
@@ -354,7 +350,7 @@
                             yAxisID: 'y'
                         },
                         {
-                            label: 'Cosine Sim',
+                            label: 'Cosine Sim (Kuantitas/Vektor)',
                             data: cosine.map(c => c.score),
                             backgroundColor: 'rgba(147, 51, 234, 0.7)',
                             borderColor: 'rgba(147, 51, 234, 1)',
@@ -373,54 +369,89 @@
                 }
             });
 
-            // Update Explanation Box
+            // --- Update Logika & Penjelasan Kualitas ---
             const box = document.getElementById('analysisBox');
             box.classList.remove('hidden');
 
-            // 1. Preprocessing Display
             document.getElementById('rawQueryDisplay').textContent = document.getElementById('queryInput').value;
-            document.getElementById('removedStopwordsDisplay').textContent = queryData.removedWords.length > 0 ? queryData.removedWords.join(", ") : "(tidak ada)";
             document.getElementById('cleanQueryDisplay').textContent = queryData.cleanTokens.join(", ");
 
-            // 2. Winner Logic Display
-            const winner = bm25.reduce((p, c) => p.score > c.score ? p : c);
-            const winnerDiv = document.getElementById('winnerAnalysis');
+            const analysisDiv = document.getElementById('qualityAnalysis');
             
+            // Mencari pemenang BM25
+            const winner = bm25.reduce((p, c) => p.score > c.score ? p : c);
+            const winnerCos = cosine.reduce((p, c) => p.score > c.score ? p : c);
+
             if (winner.score === 0) {
-                winnerDiv.innerHTML = `<p class="text-red-600 font-bold">Tidak ada dokumen yang cocok dengan query setelah preprocessing.</p>`;
-            } else {
-                let breakdownHtml = winner.breakdown.map(item => `
-                    <div class="ml-4 mb-2 p-2 bg-indigo-50 border-l-4 border-indigo-400">
-                        <p class="font-bold">Kata: "${item.term}"</p>
-                        <ul class="list-disc list-inside text-xs text-gray-700 mt-1">
-                            <li>IDF (Nilai Keunikan): ${item.idf.toFixed(3)}</li>
-                            <li>Frekuensi di Doc (TF): ${item.f} kali</li>
-                            <li>Kontribusi Akhir: ${item.termScore.toFixed(4)}</li>
-                        </ul>
-                    </div>
-                `).join('');
+                analysisDiv.innerHTML = `<p class="text-red-600">Tidak ada relevansi.</p>`;
+                return;
+            }
 
-                winnerDiv.innerHTML = `
-                    <h4 class="font-bold text-green-700 mb-2 mt-4">Step 2: Analisis Pemenang (Dokumen ${winner.id})</h4>
-                    <p class="mb-2">Dokumen ini menang dengan skor total <b>${winner.score.toFixed(4)}</b>.</p>
-                    
-                    <div class="mb-3">
-                        <p class="font-semibold text-xs uppercase text-gray-500">Breakdown per Kata Kunci:</p>
-                        ${breakdownHtml}
-                    </div>
+            let qualityMsg = "";
+            let saturationDetails = winner.breakdown.map(item => {
+                // Penjelasan konsep Saturasi
+                let satStatus = "";
+                if (item.f > 3) satStatus = "⚠️ Saturasi Tinggi (Spamming)";
+                else satStatus = "✅ Frekuensi Efektif";
 
-                    <div class="bg-gray-100 p-3 rounded text-xs mt-3">
-                        <p class="font-bold">Step 3: Normalisasi Panjang Dokumen</p>
-                        <p>Panjang Doc ${winner.id}: <b>${winner.docLen}</b> token bersih.</p>
-                        <p>Rata-rata Korpus (avgdl): <b>${avgdl.toFixed(2)}</b> token.</p>
-                        <p class="mt-1 italic text-gray-600">
-                            ${winner.docLen < avgdl 
-                                ? "Dokumen ini lebih pendek dari rata-rata, sehingga mendapat 'bonus' skor dari parameter b." 
-                                : "Dokumen ini lebih panjang dari rata-rata, sehingga mendapat 'penalti' normalisasi agar adil."}
+                return `
+                    <div class="mt-2 pl-3 border-l-2 border-indigo-300">
+                        <p class="font-bold text-xs">Kata: "${item.term}" (Muncul ${item.f}x)</p>
+                        <p class="text-xs text-gray-600">
+                            Efek ke Skor: ${item.tfComponent.toFixed(2)} / Max ${(k1+1).toFixed(2)}
+                            <br>Status: <span class="${item.f > 3 ? 'text-orange-600' : 'text-green-600'}">${satStatus}</span>
                         </p>
                     </div>
                 `;
+            }).join('');
+
+            // Logika Perbandingan
+            let comparisonText = "";
+            if (winner.id !== winnerCos.id) {
+                comparisonText = `
+                    <div class="bg-yellow-100 p-3 rounded mb-4 text-yellow-800 border border-yellow-200">
+                        <p class="font-bold">⚡ Perbedaan Pemenang Terdeteksi!</p>
+                        <ul class="list-disc list-inside mt-1 text-xs">
+                            <li><b>BM25 memilih Doc ${winner.id}:</b> Karena lebih ringkas dan tidak spam (Kualitas).</li>
+                            <li><b>Cosine memilih Doc ${winnerCos.id}:</b> Karena frekuensi kata kuncinya lebih banyak (Kuantitas).</li>
+                        </ul>
+                    </div>
+                `;
+            } else if (winner.docLen > avgdl * 1.5) {
+                comparisonText = `
+                    <div class="bg-blue-50 p-3 rounded mb-4 text-blue-800 text-xs">
+                        <p>Meskipun Doc ${winner.id} menang, perhatikan bahwa BM25 melakukan penalti karena panjangnya (${winner.docLen} kata) jauh diatas rata-rata (${avgdl.toFixed(1)}).</p>
+                    </div>
+                `;
             }
+
+            analysisDiv.innerHTML = `
+                ${comparisonText}
+
+                <h4 class="font-bold text-green-700 mb-2">Step 2: Analisis Saturasi BM25 (Kualitas)</h4>
+                <p class="mb-3">Mengapa Doc ${winner.id} mendapatkan skor <b>${winner.score.toFixed(4)}</b>?</p>
+                
+                <div class="bg-gray-100 p-3 rounded text-sm mb-3">
+                    <p class="font-bold text-gray-700">Konsep: "The Law of Diminishing Returns"</p>
+                    <p class="text-xs mt-1">
+                        Di BM25, jika sebuah kata diulang terus (misal 10x), skornya tidak akan naik 10x lipat. 
+                        Skor akan melambat dan mentok di angka <b>${(k1+1).toFixed(1)}</b>. 
+                        Ini mencegah dokumen "spam" menang mudah.
+                    </p>
+                    <div class="mt-2">
+                        ${saturationDetails}
+                    </div>
+                </div>
+
+                <div class="bg-purple-50 p-3 rounded text-sm border border-purple-100">
+                    <p class="font-bold text-purple-900">Perbandingan vs Cosine/TF-IDF Biasa:</p>
+                    <p class="text-xs mt-1 text-purple-800">
+                        Metode Cosine seringkali melihat "sudut" vektor. Jika dokumen isinya hanya "kucing kucing kucing", 
+                        vektornya sangat searah dengan query "kucing", sehingga nilainya tinggi (mendekati 1.0).
+                        BM25 lebih pintar: ia melihat itu sebagai spam dan menghukumnya lewat normalisasi panjang (b).
+                    </p>
+                </div>
+            `;
         }
 
         renderDocuments();
