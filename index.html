@@ -14,7 +14,7 @@
 </head>
 <body class="bg-slate-100 min-h-screen p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
         
         <!-- Header -->
         <div class="bg-blue-600 p-6 text-white">
@@ -22,10 +22,10 @@
             <p class="opacity-90 mt-1">Simulasi Perbandingan BM25 dan TF-IDF Cosine Similarity</p>
         </div>
 
-        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <!-- Left Column: Inputs -->
-            <div class="space-y-6">
+            <!-- Left Column: Inputs (1/3 width on large screens) -->
+            <div class="lg:col-span-1 space-y-6">
                 
                 <!-- Query Input -->
                 <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
@@ -79,31 +79,33 @@
 
             </div>
 
-            <!-- Right Column: Results & Chart -->
-            <div class="space-y-6">
+            <!-- Right Column: Results & Chart (2/3 width on large screens) -->
+            <div class="lg:col-span-2 space-y-6">
                 
-                <!-- Chart Container -->
-                <div class="bg-white p-2 rounded-lg border border-gray-200 shadow-sm min-h-[300px]">
+                <!-- Chart Container (Fixed Height) -->
+                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-96 relative">
                     <h3 class="text-center text-sm font-semibold text-gray-500 mb-2">Visualisasi Skor Relevansi</h3>
-                    <canvas id="resultsChart"></canvas>
+                    <div class="w-full h-[320px]">
+                        <canvas id="resultsChart"></canvas>
+                    </div>
                 </div>
 
                 <!-- Results Table -->
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 class="text-sm font-bold text-gray-700 mb-3">Detail Hasil Perhitungan</h3>
+                    <h3 class="text-sm font-bold text-gray-700 mb-3">Tabel Hasil Perhitungan</h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-100">
                                 <tr>
                                     <th class="px-3 py-2 rounded-l-lg">Doc ID</th>
-                                    <th class="px-3 py-2">BM25 Score</th>
-                                    <th class="px-3 py-2 rounded-r-lg">Cosine Sim</th>
+                                    <th class="px-3 py-2 text-blue-700">BM25 Score</th>
+                                    <th class="px-3 py-2 text-purple-700">Cosine Sim</th>
+                                    <th class="px-3 py-2 text-gray-500 rounded-r-lg">Panjang Doc</th>
                                 </tr>
                             </thead>
                             <tbody id="resultsTableBody">
-                                <!-- Results will be injected here -->
                                 <tr>
-                                    <td colspan="3" class="px-3 py-4 text-center text-gray-500 italic">
+                                    <td colspan="4" class="px-3 py-4 text-center text-gray-500 italic">
                                         Klik "Hitung" untuk melihat hasil...
                                     </td>
                                 </tr>
@@ -112,13 +114,15 @@
                     </div>
                 </div>
 
-                <!-- Explanation Box -->
-                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100 text-xs text-yellow-800">
-                    <p class="font-semibold mb-1">Catatan:</p>
-                    <ul class="list-disc list-inside space-y-1">
-                        <li><strong>BM25:</strong> Mempertimbangkan saturasi term (k1) dan panjang dokumen (b). Nilai tidak ternormalisasi (bisa > 1).</li>
-                        <li><strong>Cosine Similarity:</strong> Mengukur sudut antar vektor dokumen dan query. Rentang nilai 0 s/d 1.</li>
-                    </ul>
+                <!-- Detailed Analysis Box -->
+                <div id="analysisBox" class="bg-green-50 p-5 rounded-lg border border-green-100 hidden">
+                    <h3 class="text-sm font-bold text-green-800 mb-2 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        Analisis Logika
+                    </h3>
+                    <div id="analysisContent" class="text-sm text-green-900 space-y-2">
+                        <!-- Dynamic analysis will appear here -->
+                    </div>
                 </div>
 
             </div>
@@ -135,23 +139,23 @@
 
         let chartInstance = null;
 
-        // --- FUNGSI UTAMA ---
+        // --- FUNGSI HELPER ---
 
-        // 1. Tokenizer: Membersihkan dan memecah teks menjadi array kata
         function tokenize(text) {
             return text
                 .toLowerCase()
-                .replace(/[^\w\s]/g, '') // Hapus tanda baca
+                .replace(/[^\w\s]/g, '') 
                 .trim()
                 .split(/\s+/)
                 .filter(word => word.length > 0);
         }
 
-        // 2. Render Input Dokumen
+        // --- UI RENDERING ---
+
         function renderDocuments() {
             const list = document.getElementById('documentList');
             list.innerHTML = '';
-            documents.forEach((doc, index) => {
+            documents.forEach((doc) => {
                 const div = document.createElement('div');
                 div.className = 'flex items-center gap-2';
                 div.innerHTML = `
@@ -161,16 +165,16 @@
                            class="flex-1 text-sm p-2 border border-gray-300 rounded focus:border-blue-500 outline-none" 
                            placeholder="Isi kalimat dokumen...">
                     <button onclick="removeDocument(${doc.id})" 
-                            class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition" 
-                            title="Hapus Dokumen">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                     </button>
                 `;
                 list.appendChild(div);
             });
         }
 
-        // 3. Manajemen State Dokumen
+        // --- MANAJEMEN STATE ---
+
         function addDocument() {
             const newId = documents.length > 0 ? Math.max(...documents.map(d => d.id)) + 1 : 1;
             documents.push({ id: newId, text: "" });
@@ -191,7 +195,7 @@
             if (doc) doc.text = text;
         }
 
-        // --- LOGIKA PERHITUNGAN (THE CORE) ---
+        // --- LOGIKA UTAMA ---
 
         function calculate() {
             const queryText = document.getElementById('queryInput').value;
@@ -210,124 +214,95 @@
                 tokens: tokenize(doc.text)
             }));
 
-            // --- A. Hitung BM25 ---
-            
-            // Average Document Length (avgdl)
+            // 1. Hitung AvgDocLength
             const totalLength = tokenizedDocs.reduce((sum, doc) => sum + doc.tokens.length, 0);
             const avgdl = totalLength / tokenizedDocs.length;
             const N = tokenizedDocs.length;
 
+            // 2. Hitung BM25
             const bm25Results = tokenizedDocs.map(doc => {
                 let score = 0;
+                let details = []; // Untuk penjelasan
                 const docLen = doc.tokens.length;
 
                 queryTokens.forEach(term => {
-                    // Hitung frekuensi term di dokumen ini (f_td)
                     const f_td = doc.tokens.filter(t => t === term).length;
-                    
-                    // Hitung frekuensi dokumen yang mengandung term (n_q)
                     const n_q = tokenizedDocs.filter(d => d.tokens.includes(term)).length;
-
-                    // IDF (Probabilistic)
-                    // Rumus: ln( (N - n(q) + 0.5) / (n(q) + 0.5) + 1 )
                     const idf = Math.log( ((N - n_q + 0.5) / (n_q + 0.5)) + 1 );
-
-                    // Bagian Term Frequency BM25
+                    
                     const numerator = f_td * (k1 + 1);
                     const denominator = f_td + k1 * (1 - b + b * (docLen / avgdl));
+                    const termScore = idf * (numerator / denominator);
 
-                    score += idf * (numerator / denominator);
+                    score += termScore;
+                    
+                    if(termScore > 0) {
+                        details.push({term, f_td, termScore});
+                    }
                 });
 
-                return { id: doc.id, score: Math.max(0, score) }; // Score tidak boleh negatif untuk visualisasi
+                return { 
+                    id: doc.id, 
+                    score: Math.max(0, score),
+                    docLen: docLen,
+                    details: details 
+                };
             });
 
-
-            // --- B. Hitung TF-IDF Cosine Similarity ---
-            
-            // 1. Buat Vocabulary Unik (Query + Semua Dokumen) untuk ruang vektor yang lengkap
+            // 3. Hitung TF-IDF Cosine
             const allTokens = new Set([...queryTokens]);
             tokenizedDocs.forEach(d => d.tokens.forEach(t => allTokens.add(t)));
             const vocabulary = Array.from(allTokens);
 
-            // 2. Fungsi Hitung Vektor TF-IDF
             function getTfIdfVector(targetTokens, allDocs) {
                 return vocabulary.map(term => {
-                    // TF (Term Frequency) - Log Normalization: 1 + log(f) jika f > 0
                     const rawCount = targetTokens.filter(t => t === term).length;
                     const tf = rawCount > 0 ? (1 + Math.log10(rawCount)) : 0;
-
-                    // IDF (Inverse Document Frequency) - Standard: log10(N / df)
                     const df = allDocs.filter(d => d.tokens.includes(term)).length;
                     const idf = df > 0 ? Math.log10(allDocs.length / df) : 0;
-
                     return tf * idf;
                 });
             }
 
-            // Vector Query
             const queryVector = getTfIdfVector(queryTokens, tokenizedDocs);
-            
-            // Hitung Similarity untuk setiap dokumen
             const cosineResults = tokenizedDocs.map(doc => {
                 const docVector = getTfIdfVector(doc.tokens, tokenizedDocs);
-
-                // Dot Product
-                let dotProduct = 0;
-                let magQuery = 0;
-                let magDoc = 0;
-
+                let dotProduct = 0, magQuery = 0, magDoc = 0;
                 for (let i = 0; i < vocabulary.length; i++) {
                     dotProduct += queryVector[i] * docVector[i];
                     magQuery += queryVector[i] ** 2;
                     magDoc += docVector[i] ** 2;
                 }
-
                 magQuery = Math.sqrt(magQuery);
                 magDoc = Math.sqrt(magDoc);
-
-                let similarity = 0;
-                if (magQuery > 0 && magDoc > 0) {
-                    similarity = dotProduct / (magQuery * magDoc);
-                }
-
+                let similarity = (magQuery > 0 && magDoc > 0) ? dotProduct / (magQuery * magDoc) : 0;
                 return { id: doc.id, score: similarity };
             });
 
-            // --- C. Update UI ---
-            updateTable(bm25Results, cosineResults);
-            updateChart(bm25Results, cosineResults);
+            updateUI(bm25Results, cosineResults, avgdl);
         }
 
-        function updateTable(bm25, cosine) {
+        function updateUI(bm25, cosine, avgdl) {
+            // Update Table
             const tbody = document.getElementById('resultsTableBody');
             tbody.innerHTML = '';
-
-            bm25.forEach((res, index) => {
+            bm25.forEach((res) => {
                 const cosRes = cosine.find(c => c.id === res.id);
-                const row = document.createElement('tr');
-                row.className = "border-b hover:bg-gray-50 transition";
-                row.innerHTML = `
-                    <td class="px-3 py-2 font-medium">Doc ${res.id}</td>
-                    <td class="px-3 py-2 text-blue-600 font-bold">${res.score.toFixed(4)}</td>
-                    <td class="px-3 py-2 text-purple-600 font-bold">${cosRes ? cosRes.score.toFixed(4) : '0.0000'}</td>
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="px-3 py-2 font-medium">Doc ${res.id}</td>
+                        <td class="px-3 py-2 text-blue-600 font-bold">${res.score.toFixed(4)}</td>
+                        <td class="px-3 py-2 text-purple-600 font-bold">${cosRes ? cosRes.score.toFixed(4) : '0.0000'}</td>
+                        <td class="px-3 py-2 text-gray-500">${res.docLen} kata</td>
+                    </tr>
                 `;
-                tbody.appendChild(row);
             });
-        }
 
-        function updateChart(bm25, cosine) {
+            // Update Chart
             const ctx = document.getElementById('resultsChart').getContext('2d');
             const labels = bm25.map(r => `Doc ${r.id}`);
-            const bm25Data = bm25.map(r => r.score);
-            const cosineData = cosine.map(r => {
-                const c = cosine.find(x => x.id === r.id);
-                return c ? c.score : 0;
-            });
-
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
+            
+            if (chartInstance) chartInstance.destroy();
 
             chartInstance = new Chart(ctx, {
                 type: 'bar',
@@ -335,64 +310,73 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'BM25 Score',
-                            data: bm25Data,
-                            backgroundColor: 'rgba(37, 99, 235, 0.6)', // Blue
+                            label: 'BM25',
+                            data: bm25.map(r => r.score),
+                            backgroundColor: 'rgba(37, 99, 235, 0.7)',
                             borderColor: 'rgba(37, 99, 235, 1)',
-                            borderWidth: 1
+                            borderWidth: 1,
+                            yAxisID: 'y'
                         },
                         {
-                            label: 'Cosine Similarity (TF-IDF)',
-                            data: cosineData,
-                            backgroundColor: 'rgba(147, 51, 234, 0.6)', // Purple
+                            label: 'Cosine Sim (0-1)',
+                            data: cosine.map(c => c.score),
+                            backgroundColor: 'rgba(147, 51, 234, 0.7)',
                             borderColor: 'rgba(147, 51, 234, 1)',
                             borderWidth: 1,
-                            // Tampilkan cosine di axis kanan (optional) atau biarkan dibandingkan langsung
-                            // Untuk kasus ini, karena skalanya beda (BM25 bisa >1, Cosine 0-1), 
-                            // kita gunakan y-axis kedua agar lebih adil visualisasinya.
-                            yAxisID: 'y1' 
+                            yAxisID: 'y1'
                         }
                     ]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
+                    maintainAspectRatio: false, // Penting agar mengikuti tinggi container
                     scales: {
                         y: {
                             beginAtZero: true,
-                            type: 'linear',
-                            display: true,
                             position: 'left',
-                            title: { display: true, text: 'Nilai BM25' }
+                            title: { display: true, text: 'Score BM25' }
                         },
                         y1: {
                             beginAtZero: true,
-                            type: 'linear',
-                            display: true,
                             position: 'right',
-                            grid: {
-                                drawOnChartArea: false, // only want the grid lines for one axis to show up
-                            },
-                            title: { display: true, text: 'Nilai Cosine Similarity (0-1)' },
-                            max: 1.0 // Cosine max is always 1
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
+                            max: 1.0,
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Similarity' }
                         }
                     }
                 }
             });
+
+            // Update Logic Analysis
+            const winner = bm25.reduce((prev, current) => (prev.score > current.score) ? prev : current);
+            const analysisDiv = document.getElementById('analysisContent');
+            const box = document.getElementById('analysisBox');
+            
+            if (winner.score > 0) {
+                box.classList.remove('hidden');
+                
+                let termsHtml = winner.details.map(d => 
+                    `<li>Kata <b>"${d.term}"</b> muncul ${d.f_td} kali (kontribusi skor: ${d.termScore.toFixed(2)})</li>`
+                ).join('');
+
+                analysisDiv.innerHTML = `
+                    <p>🏆 <b>Dokumen ${winner.id} paling relevan</b> dengan skor BM25: <b>${winner.score.toFixed(4)}</b>.</p>
+                    <ul class="list-disc list-inside mt-2 ml-2 text-gray-700">
+                        ${termsHtml}
+                    </ul>
+                    <p class="mt-2 text-xs italic">
+                        *Panjang dokumen ini adalah ${winner.docLen} kata (Rata-rata korpus: ${avgdl.toFixed(1)}).
+                        ${winner.docLen < avgdl ? "Karena lebih pendek dari rata-rata, dokumen ini mendapat 'boost' positif." : "Karena lebih panjang dari rata-rata, skornya sedikit dinormalisasi (penalti panjang)."}
+                    </p>
+                `;
+            } else {
+                box.classList.remove('hidden');
+                analysisDiv.innerHTML = `<p class="text-red-600">Tidak ada dokumen yang relevan dengan query (Skor 0).</p>`;
+            }
         }
 
-        // Initialize
         renderDocuments();
-        // Lakukan kalkulasi awal setelah load agar grafik tidak kosong
-        window.onload = function() {
-            setTimeout(calculate, 500); // delay sedikit memastikan chart.js ready
-        }
+        window.onload = function() { setTimeout(calculate, 500); }
     </script>
 </body>
 </html>
